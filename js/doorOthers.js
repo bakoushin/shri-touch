@@ -283,7 +283,7 @@ function Door2(number, onUnlock) {
         digits[i].classList.remove(...digitClasses);
         digits[i].classList.add(digitClasses[values[i]]);
     }
-    
+
     function _checkCondition() {
         var MAGIC_NUMBER = 42;
 
