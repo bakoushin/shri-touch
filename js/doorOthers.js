@@ -84,18 +84,18 @@ function Door1(number, onUnlock) {
         currentPosition[i] = startPosition[i] = e.pageY;
         isGestureStarted[i] = true;
 
-        disableTransition(i);
+        _disableTransition(i);
     }
     
     function _onLeafPointerUp(e) {
         var i = leafs.indexOf(e.target);
     
-        currentPosition[i] = e.pageX;
+        currentPosition[i] = e.pageY;
         isGestureStarted[i] = false;
 
         leafs[i].releasePointerCapture(e.pointerId);
-        enableTransition(i);
-        resetPosition(i);
+        _enableTransition(i);
+        _resetPosition(i);
     }
 
     function _onLeafPointerMove(e) {
@@ -106,12 +106,12 @@ function Door1(number, onUnlock) {
         }
 
         currentPosition[i] = e.pageY;
-        updatePosition(i);
+        _updatePosition(i);
 
-        checkCondition.apply(this);
+        _checkCondition.apply(this);
     }
 
-    function updatePosition(i) {
+    function _updatePosition(i) {
         requestAnimationFrame(function() {
             var diff = Math.floor(currentPosition[i] - startPosition[i]);
             var normalizer = i === 0 ? Math.min : Math.max;
@@ -120,21 +120,21 @@ function Door1(number, onUnlock) {
         });
     }
 
-    function resetPosition(i) {
+    function _resetPosition(i) {
         requestAnimationFrame(function() {
             leafs[i].style.transform = '';
         });
     }    
     
-    function disableTransition(i) {
+    function _disableTransition(i) {
         leafs[i].style.transition = 'none';
     }
 
-    function enableTransition(i) {
+    function _enableTransition(i) {
         leafs[i].style.transition = '';
     }
 
-    function checkCondition() {
+    function _checkCondition() {
         var THRESHOLD = 40;
         var isOpened = [false, false];
 
@@ -223,17 +223,31 @@ function Door2(number, onUnlock) {
     function _enableCoverTransition() {
         cover.style.transition = '';
     }
+
+    // Gears
+
+    var gears = [
+        this.popup.querySelector('.door-keypad__gear_0'),
+        this.popup.querySelector('.door-keypad__gear_1')
+    ];
+
+    var currentPosition = [];
+    var lastStepPosition = [];
+    var isGestureStarted = [];
+
+    var values = [0, 0];
     
-    // Buttons
+    gears.forEach(function(l) {
+        l.addEventListener('pointerdown', _onGearPointerDown.bind(this));
+        l.addEventListener('pointerup', _onGearPointerUp.bind(this));
+        l.addEventListener('pointermove', _onGearPointerMove.bind(this));
+        l.addEventListener('pointercancel', _onGearPointerUp.bind(this));
+        l.addEventListener('pointerleave', _onGearPointerUp.bind(this));
+    }.bind(this));
 
     var digits = [
         this.popup.querySelector('.door-keypad__digit_0'),
         this.popup.querySelector('.door-keypad__digit_1')
-    ];
-
-    var buttons = [
-        this.popup.querySelector('.door-keypad__button_0'),
-        this.popup.querySelector('.door-keypad__button_1')
     ];
 
     var digitClasses = [
@@ -248,37 +262,62 @@ function Door2(number, onUnlock) {
         'door-keypad__digit_value_8',
         'door-keypad__digit_value_9'
     ];
-
-    var values = [0, 0];
-
-    buttons.forEach(function(b) {
-        b.addEventListener('pointerdown', _onButtonPointerDown.bind(this));
-        b.addEventListener('pointerup', _onButtonPointerUp.bind(this));
-        b.addEventListener('pointercancel', _onButtonPointerUp.bind(this));
-        b.addEventListener('pointerleave', _onButtonPointerUp.bind(this));
-    }.bind(this));
-
-    function _onButtonPointerDown(e) {
-        e.preventDefault();
-        e.target.classList.add('door-riddle__button_pressed');
-        var i = buttons.indexOf(e.target);
-        _incrementValue(i);
-        _updateValue(i);
-        _checkCondition.apply(this);
+    
+    function _onGearPointerDown(e) {
+        var i = gears.indexOf(e.target);
+        isGestureStarted[i] = true;
+        currentPosition[i] = e.pageY;
+        lastStepPosition[i] = e.pageY;
+        gears[i].setPointerCapture(e.pointerId);
+    }
+    
+    function _onGearPointerUp(e) {
+        var i = gears.indexOf(e.target);
+        isGestureStarted[i] = false;
+        gears[i].releasePointerCapture(e.pointerId);
     }
 
-    function _onButtonPointerUp(e) {
-        e.target.classList.remove('door-riddle__button_pressed');
-    }
+    function _onGearPointerMove(e) {
+        var STEP = 10;
 
-    function _incrementValue(i) {
-        var THRESHOLD = 9;
-        values[i]++;
-        if (values[i] > THRESHOLD) {
-            values[i] = 0;
+        var i = gears.indexOf(e.target);
+
+        if (!isGestureStarted[i]) {
+            return;
+        }
+
+        var diff = currentPosition[i] - e.pageY;
+        _rotateGear(i, diff);
+        currentPosition[i] - e.pageY;
+
+        var stepDiff = lastStepPosition[i] - e.pageY;
+        if (Math.abs(stepDiff) > STEP) {
+            lastStepPosition[i] = e.pageY;
+            var value = stepDiff / Math.abs(stepDiff);
+            _changeValue(i, value);
+            _updateValue(i);
+            _checkCondition.apply(this);
         }
     }
 
+    function _rotateGear(i, angle) {
+        requestAnimationFrame(function() {
+            var normalizer = i === 0 ? -1 : 1;
+            gears[i].style.transform = 'rotate(' + angle * normalizer + 'deg)';
+        });
+    }
+
+    function _changeValue(i, value) {
+        var THRESHOLD = 9;
+        values[i] += value;
+        if (values[i] > THRESHOLD) {
+            values[i] = 0;
+        }
+        if (values[i] < 0) {
+            values[i] = THRESHOLD;
+        }
+    }
+    
     function _updateValue(i) {
         digits[i].classList.remove(...digitClasses);
         digits[i].classList.add(digitClasses[values[i]]);
@@ -298,8 +337,7 @@ function Door2(number, onUnlock) {
                 }
             }, 10);
         }
-    }
-    
+    } 
 
 }
 Door2.prototype = Object.create(DoorBase.prototype);
