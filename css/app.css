@@ -237,7 +237,6 @@ body {
     align-items: center;
     padding: 15%;
     font: 36px Underdog, sans-serif;
-    /* font-weight: bold; */
     color: #583319;
     background: url(../img/dirtDown.png) repeat-x bottom, 
         url(../img/dirt.png) bottom;
@@ -255,30 +254,12 @@ body {
 .door-keypad {
     height: 100%;
     position: relative;
+    margin-top: 50vh;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-column-gap: 16px;
     align-content: center;
-    margin-top: 25%;
-}
-
-.door-keypad__button {
-    width: 64px;
-    height: 64px;
-    border-radius: 64px;
-    background-color: #583319;
-    border: 1px solid #F3E9E0;
-    box-shadow: 3px 3px 3px rgba(0, 0, 0, .4);
-
-    transition: background-color .3s;
-}
-
-.door-keypad__button--pressed {
-    background-color: #F3E5D9;
-}
-
-.door-keypad__button_0 {
-    justify-self: right;
+    height: 36vw;
 }
 
 .door-keypad__digit {
@@ -289,6 +270,21 @@ body {
 
 .door-keypad__digit_0 {
     justify-self: right;
+}
+
+.door-keypad__gear {
+    position: absolute;
+    width: 36vw;
+    height: 36vw;
+    background: url(../img/gear.png) no-repeat;
+    background-size: 36vw;
+}
+
+.door-keypad__gear_0 {
+    left: -16vw;
+}
+.door-keypad__gear_1 {
+    right: -16vw;
 }
 
 .door-keypad__digit_value_0 {
